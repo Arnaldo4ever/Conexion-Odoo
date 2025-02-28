@@ -2,15 +2,10 @@
 import express, { Request, Response } from 'express';
 import axios from 'axios';
 import archiver from 'archiver';
-import cors from 'cors';
 
 // Declara 'app' antes de usarla
 const app = express();
 
-// Configura CORS
-app.use(cors({
-  origin: 'https://blocksters-store.myshopify.com' // O usa '*' para permitir cualquier origen (no recomendado en producción)
-}));
 
 // Configuración de Odoo
 const ODOO_LOGIN_URL = 'https://garys.zenn.es/web/session/authenticate';
