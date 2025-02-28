@@ -2,8 +2,15 @@
 import express, { Request, Response } from 'express';
 import axios from 'axios';
 import archiver from 'archiver';
+import cors from 'cors';
 
+// Declara 'app' antes de usarla
 const app = express();
+
+// Configura CORS
+app.use(cors({
+  origin: 'https://blocksters-store.myshopify.com' // O usa '*' para permitir cualquier origen (no recomendado en producción)
+}));
 
 // Configuración de Odoo
 const ODOO_LOGIN_URL = 'https://garys.zenn.es/web/session/authenticate';
@@ -136,6 +143,24 @@ async function obtenerProductData(sessionId: string): Promise<any[]> {
     } catch (error) {
       console.error('Error en /ids:', error);
       res.status(500).json({ error: 'Error al obtener datos' });
+    }
+  });
+
+  app.get('/check-certificates', async (req: Request, res: Response) => {
+    const productId = req.query.product_id as string;
+    if (!productId) {
+      return res.status(400).json({ error: 'No se proporcionó ID de producto' });
+    }
+    try {
+      // Obtén el sessionId de Odoo
+      const sessionId = await obtenerSessionId();
+      // Consulta los certificados del producto
+      const documentos = await obtenerDocumentosProducto(productId, sessionId);
+      // Retorna la data en JSON
+      res.json({ certificados: documentos });
+    } catch (error) {
+      console.error("Error en /check-certificates:", error);
+      res.status(500).json({ error: 'Error al obtener certificados' });
     }
   });
 
