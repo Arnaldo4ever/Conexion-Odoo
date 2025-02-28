@@ -12,7 +12,6 @@ const ODOO_USER = 'upango';
 const ODOO_PASSWORD = '4lDbFNNmYhcDLmK';
 const ODOO_DB = 'db-garys';
 
-// Interfaces para tipar la respuesta de Odoo
 interface OdooLoginResponse {
   result: { session_id: string };
 }
@@ -72,7 +71,6 @@ app.get('/download-certificates', async (req: Request, res: Response) => {
   }
 
   try {
-    // Obtiene la sesión en Odoo y luego los documentos del producto
     const sessionId = await obtenerSessionId();
     const documentos = await obtenerDocumentosProducto(productId, sessionId);
 
@@ -80,18 +78,15 @@ app.get('/download-certificates', async (req: Request, res: Response) => {
       return res.status(404).send('No hay certificados disponibles para este producto');
     }
 
-    // Configura la respuesta para el archivo ZIP
     res.writeHead(200, {
       'Content-Type': 'application/zip',
       'Content-Disposition': `attachment; filename=certificados_${productId}.zip`
     });
 
-    // Crea el archivo ZIP usando Archiver
     const archive = archiver('zip', { zlib: { level: 9 } });
     archive.on('error', err => { throw err; });
     archive.pipe(res);
 
-    // Descarga cada documento y agrégalo al ZIP
     for (const doc of documentos) {
       const response = await axios.get(doc.file_url, { responseType: 'arraybuffer' });
       archive.append(response.data, { name: doc.filename });
@@ -104,6 +99,45 @@ app.get('/download-certificates', async (req: Request, res: Response) => {
     res.status(500).send('Error al obtener certificados');
   }
 });
+
+// Función para obtener los datos de productos usando search_read
+async function obtenerProductData(sessionId: string): Promise<any[]> {
+    const payload = {
+      jsonrpc: "2.0",
+      method: "call",
+      params: {
+        model: "product.product",
+        method: "search_read",
+        args: [
+          [], 
+          ["id", "name", "default_code", "list_price", "standard_price", "categ_id", "qty_available", "barcode", "uom_id"]
+        ],
+        kwargs: {}
+      },
+      id: 1
+    };
+  
+    const response = await axios.post<{ result: any[] }>(ODOO_SERVICE_URL, payload, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Openerp-Session-Id': sessionId,
+      }
+    });
+    
+    return response.data.result;
+  }
+  
+  // Endpoint para consultar la data de productos en formato JSON
+  app.get('/ids', async (req: Request, res: Response) => {
+    try {
+      const sessionId = await obtenerSessionId();
+      const productos = await obtenerProductData(sessionId);
+      res.json({ productos });
+    } catch (error) {
+      console.error('Error en /ids:', error);
+      res.status(500).json({ error: 'Error al obtener datos' });
+    }
+  });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
