@@ -160,15 +160,19 @@ async function obtenerProductData(sessionId: string): Promise<any[]> {
   });
 
 
-  // Función para validar el crédito del cliente
-async function esCreditoCorrecto(sessionId: string, clientId: number, importe: number): Promise<boolean> {
+// Función para validar el crédito del cliente usando ExternalID
+async function esCreditoCorrecto(
+  sessionId: string, 
+  externalId: string, 
+  importe: number
+): Promise<boolean> {
   const payload = {
     jsonrpc: "2.0",
     method: "call",
     params: {
       model: "sale.order",
       method: "get_credit_control", // Método en Odoo para validar crédito
-      args: [clientId, importe],
+      args: [externalId, importe],  // Aquí envías el ExternalID y el importe
       kwargs: {}
     },
     id: 1
@@ -180,31 +184,31 @@ async function esCreditoCorrecto(sessionId: string, clientId: number, importe: n
       'X-Openerp-Session-Id': sessionId,
     }
   });
-  
+
   return response.data.result;
 }
 
 // Endpoint para validar crédito
 app.get('/check-credit', async (req: Request, res: Response) => {
-  const clientIdParam = req.query.client_id as string;
+  const externalId = req.query.external_id as string;
   const importeParam = req.query.importe as string;
   
-  if (!clientIdParam || !importeParam) {
-    return res.status(400).json({ error: 'Falta client_id o importe en los parámetros' });
+  if (!externalId || !importeParam) {
+    return res.status(400).json({ error: 'Falta external_id o importe en los parámetros' });
   }
   
-  const clientId = Number(clientIdParam);
   const importe = Number(importeParam);
   
   try {
     const sessionId = await obtenerSessionId();
-    const creditoOk = await esCreditoCorrecto(sessionId, clientId, importe);
+    const creditoOk = await esCreditoCorrecto(sessionId, externalId, importe);
     res.json({ creditoOk });
   } catch (error) {
     console.error('Error en /check-credit:', error);
     res.status(500).json({ error: 'Error al validar el crédito' });
   }
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
