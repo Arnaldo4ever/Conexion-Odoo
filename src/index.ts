@@ -190,25 +190,17 @@ async function esCreditoCorrecto(
 
 // Endpoint para validar crédito
 app.get('/check-credit', async (req: Request, res: Response) => {
-  const email = req.query.email as string; // En lugar de external_id
+  const externalId = req.query.external_id as string;
   const importeParam = req.query.importe as string;
   
-  if (!email || !importeParam) {
-    return res.status(400).json({ error: 'Falta email o importe en los parámetros' });
+  if (!externalId || !importeParam) {
+    return res.status(400).json({ error: 'Falta external_id o importe en los parámetros' });
   }
   
   const importe = Number(importeParam);
   
   try {
     const sessionId = await obtenerSessionId();
-    
-    // Supón que tienes una función que obtiene el external_id basado en el email del cliente:
-    const externalId = await obtenerExternalIdPorEmail(sessionId, email);
-    
-    if (!externalId) {
-      return res.status(404).json({ error: 'No se encontró external_id para el cliente' });
-    }
-    
     const creditoOk = await esCreditoCorrecto(sessionId, externalId, importe);
     res.json({ creditoOk });
   } catch (error) {
@@ -216,7 +208,6 @@ app.get('/check-credit', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error al validar el crédito' });
   }
 });
-
 
 
 const PORT = process.env.PORT || 3000;
