@@ -1,8 +1,11 @@
-import express, { Request, Response } from 'express';
-const app = express();
+// src/routes/discount.ts
+import { Router, Request, Response } from 'express';
+import { generarDescuentoPorAgencia } from '../services/priceRules';
 
-app.get('/generar-descuento', async (req: Request, res: Response) => {
-  const formaEntrega = req.query.forma_entrega as string; // Se espera que este valor provenga del metafield del cliente
+const router = Router();
+
+router.get('/', async (req: Request, res: Response) => {
+  const formaEntrega = req.query.forma_entrega as string;
   if (!formaEntrega) {
     return res.status(400).json({ error: 'Falta el parámetro forma_entrega' });
   }
@@ -20,7 +23,4 @@ app.get('/generar-descuento', async (req: Request, res: Response) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
-});
+export default router;
