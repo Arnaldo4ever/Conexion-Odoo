@@ -1,21 +1,35 @@
 import { Session } from '@shopify/shopify-api';
+import { shopify } from '../shopify';
 
 interface ShippingDiscount {
   type: string;
   discount: number;
 }
 
+interface CustomerMetafieldResponse {
+  data: {
+    customer?: {
+      metafield?: {
+        value: string;
+      };
+    };
+  };
+}
+
+type ValidShippingTypes = 'AGENCIA0_GRATUITA' | 'AGENCIA_25' | 'AGENCIA_P_25' | 'AGENCIA_P_50' | 'ENVIO_F&A' | 'AGENCIA';
+
 export class ShippingDiscountService {
-  private static readonly DISCOUNT_TYPES = {
+  private static readonly DISCOUNT_TYPES: Record<ValidShippingTypes, ShippingDiscount> = {
     AGENCIA0_GRATUITA: { type: 'free', discount: 100 },
     AGENCIA_25: { type: 'percentage', discount: 25 },
     'AGENCIA_P_25': { type: 'percentage', discount: 25 },
     'AGENCIA_P_50': { type: 'percentage', discount: 50 },
     'ENVIO_F&A': { type: 'specific', discount: 100 },
+    'AGENCIA': { type: 'none', discount: 0 }
   };
 
-  static async getCustomerShippingPreference(session: Session, customerId: string): Promise<string> {
-    const client = new session.client.graphql();
+  static async getCustomerShippingPreference(session: Session, customerId: string): Promise<ValidShippingTypes> {
+    const client = new shopify.clients.Graphql({ session });
     
     const query = `
       query getCustomerMetafield($customerId: ID!) {
@@ -27,7 +41,7 @@ export class ShippingDiscountService {
       }
     `;
 
-    const response = await client.query({
+    const response = await client.query<CustomerMetafieldResponse>({
       data: {
         query,
         variables: {
@@ -36,21 +50,20 @@ export class ShippingDiscountService {
       }
     });
 
-    return response.body.data.customer?.metafield?.value || 'AGENCIA';
+    const value = response.body.data.customer?.metafield?.value || 'AGENCIA';
+    return this.validateShippingType(value);
   }
 
-  static getDiscountForShippingType(shippingType: string): ShippingDiscount {
-    const discountConfig = this.DISCOUNT_TYPES[shippingType];
-    
-    if (!discountConfig) {
-      return { type: 'none', discount: 0 };
-    }
+  private static validateShippingType(value: string): ValidShippingTypes {
+    return (value in this.DISCOUNT_TYPES) ? value as ValidShippingTypes : 'AGENCIA';
+  }
 
-    return discountConfig;
+  static getDiscountForShippingType(shippingType: ValidShippingTypes): ShippingDiscount {
+    return this.DISCOUNT_TYPES[shippingType];
   }
 
   static async createAutomaticDiscount(session: Session, shopDomain: string, discountAmount: number): Promise<void> {
-    const client = new session.client.graphql();
+    const client = new shopify.clients.Graphql({ session });
     
     const mutation = `
       mutation discountCodeBasicCreate($input: DiscountCodeBasicInput!) {

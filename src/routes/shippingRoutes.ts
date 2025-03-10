@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { ShippingDiscountService } from '../services/shippingDiscountService';
 import { Session } from '@shopify/shopify-api';
+import { SetupService } from '../services/setupService';
 
 const router = Router();
 

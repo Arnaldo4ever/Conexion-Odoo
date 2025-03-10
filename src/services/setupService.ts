@@ -1,8 +1,9 @@
 import { Session } from '@shopify/shopify-api';
+import { shopify } from '../../src/shopify';
 
 export class SetupService {
   static async createMetafield(session: Session): Promise<void> {
-    const client = new session.client.graphql();
+    const client = new shopify.clients.Graphql({ session });
     
     const mutation = `
       mutation metafieldsSet($metafields: [MetafieldsSetInput!]!) {
@@ -39,7 +40,7 @@ export class SetupService {
   }
 
   static async setupWebhooks(session: Session): Promise<void> {
-    const client = new session.client.graphql();
+    const client = new shopify.clients.Graphql({ session });
     
     const mutation = `
       mutation webhookSubscriptionCreate($topic: WebhookSubscriptionTopic!, $webhookSubscription: WebhookSubscriptionInput!) {
