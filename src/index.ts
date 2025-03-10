@@ -2,6 +2,7 @@
 import express, { Request, Response } from 'express';
 import axios from 'axios';
 import archiver from 'archiver';
+import discountRoutes from './routes/discount';
 
 // Declara 'app' antes de usarla
 const app = express();
@@ -208,6 +209,10 @@ app.get('/check-credit', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error al validar el crédito' });
   }
 });
+
+
+// Monta el endpoint para generar descuentos
+app.use('/generar-descuento', discountRoutes);
 
 
 const PORT = process.env.PORT || 3000;

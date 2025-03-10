@@ -1,4 +1,4 @@
-// src/routes/discount.ts
+// backend/src/routes/discount.ts
 import { Router, Request, Response } from 'express';
 import { generarDescuentoPorAgencia } from '../services/priceRules';
 
