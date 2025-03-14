@@ -23,6 +23,22 @@ router.get('/products/:id', async (req, res) => {
     }
 });
 
+// 🔹 Buscar producto por Código Modelo (SKU)
+router.get('/products/sku/:codigoModelo', async (req, res) => {
+    try {
+        const { codigoModelo } = req.params;
+        if (!codigoModelo) return res.status(400).json({ error: "SKU es requerido" });
+
+        const products = await callOdooAPI('product.product', ['name', 'default_code', 'list_price', 'qty_available'], [['default_code', '=', codigoModelo]]);
+        if (products.length === 0) {
+            return res.status(404).json({ error: "Producto no encontrado" });
+        }
+        res.json(products[0]);
+    } catch (error) {
+        res.status(500).json({ error: "Error en la consulta de Odoo" });
+    }
+});
+
 // 🔹 Listar usuarios
 router.get('/users', async (req, res) => {
     try {
