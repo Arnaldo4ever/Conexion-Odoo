@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const fetch = require("node-fetch"); // Si usas Node.js 18+, puedes usar fetch nativo
+const fetch = globalThis.fetch || require('node-fetch'); // Si usas Node.js 18+, puedes usar fetch nativo
 
 // Endpoint para validar crédito del usuario en Odoo
 router.get("/api/shopify/check-credit", async (req, res) => {
