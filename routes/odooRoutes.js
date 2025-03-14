@@ -13,6 +13,8 @@ router.get('/products', async (req, res) => {
     }
 });
 
+
+
 // 🔹 Buscar producto por ID
 router.get('/products/:id', async (req, res) => {
     try {
@@ -42,7 +44,7 @@ router.get('/products/sku/:codigoModelo', async (req, res) => {
 // 🔹 Listar usuarios
 router.get('/users', async (req, res) => {
     try {
-        const users = await callOdooAPI('res.users', ['name', 'login', 'email']);
+        const users = await callOdooAPI('res.users', ['name', 'login', 'email', 'partner_id']);
         res.json({ users });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -52,10 +54,39 @@ router.get('/users', async (req, res) => {
 // 🔹 Buscar usuario por ID
 router.get('/users/:id', async (req, res) => {
     try {
-        const user = await getByIdFromOdoo('res.users', ['name', 'login', 'email'], parseInt(req.params.id));
+        const user = await getByIdFromOdoo('res.users', ['name', 'login', 'email', 'partner_id'], parseInt(req.params.id));
         res.json(user);
     } catch (error) {
         res.status(404).json({ error: error.message });
+    }
+});
+
+// 🔹 Buscar usuario por ID y obtener partner_id para consultar el crédito
+router.get('/users/credit/:id', async (req, res) => {
+    try {
+        const userId = parseInt(req.params.id);
+        const user = await getByIdFromOdoo('res.users', ['name', 'login', 'email', 'partner_id'], userId);
+
+        if (!user) {
+            return res.status(404).json({ error: "Usuario no encontrado" });
+        }
+
+        const partnerId = user.partner_id[0]; // Odoo devuelve un array con el ID en la primera posición
+
+        if (!partnerId) {
+            return res.json({ ...user, credit: "No disponible (sin partner_id)" });
+        }
+
+        // Consultar el crédito con el partner_id
+        const creditData = await getByIdFromOdoo('res.partner', ['credit'], partnerId);
+
+        res.json({
+            ...user,
+            partner_id: partnerId,
+            credit: creditData ? creditData.credit : "No disponible"
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -82,7 +113,7 @@ router.get('/orders/:id', async (req, res) => {
 // 🔹 Listar partners (clientes/proveedores)
 router.get('/partners', async (req, res) => {
     try {
-        const partners = await callOdooAPI('res.partner', ['name', 'email', 'phone']);
+        const partners = await callOdooAPI('res.partner', ['name', 'email', 'phone', 'credit']);
         res.json({ partners });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -92,7 +123,7 @@ router.get('/partners', async (req, res) => {
 // 🔹 Buscar partner por ID
 router.get('/partners/:id', async (req, res) => {
     try {
-        const partner = await getByIdFromOdoo('res.partner', ['name', 'email', 'phone'], parseInt(req.params.id));
+        const partner = await getByIdFromOdoo('res.partner', ['name', 'email', 'phone', 'credit'], parseInt(req.params.id));
         res.json(partner);
     } catch (error) {
         res.status(404).json({ error: error.message });
