@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const odooRoutes = require('./routes/odooRoutes');
+const checkCreditRoute = require("./routes/checkCredit");
 
 const app = express();
 app.use(cors());
