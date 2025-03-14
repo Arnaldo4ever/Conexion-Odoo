@@ -9,6 +9,14 @@ const ODOO_DB = process.env.ODOO_DB;
 
 let sessionId = null;
 
+
+//probar que imprima los datos correctos
+console.log("🔹 ODOO_LOGIN_URL:", ODOO_LOGIN_URL);
+console.log("🔹 ODOO_SERVICE_URL:", ODOO_SERVICE_URL);
+console.log("🔹 ODOO_USER:", ODOO_USER);
+console.log("🔹 ODOO_DB:", ODOO_DB);
+
+
 // 🔹 Autenticar en Odoo
 async function authenticateOdoo() {
     try {
