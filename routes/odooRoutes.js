@@ -13,8 +13,6 @@ router.get('/products', async (req, res) => {
     }
 });
 
-
-
 // 🔹 Buscar producto por ID
 router.get('/products/:id', async (req, res) => {
     try {
@@ -45,7 +43,9 @@ router.get('/products/sku/:codigoModelo', async (req, res) => {
 router.get('/users', async (req, res) => {
     try {
         const users = await callOdooAPI('res.users', ['name', 'login', 'email', 'partner_id']);
-        res.json({ users });
+        
+        res.json({ total_users: users.length,
+            users: users });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
