@@ -6,6 +6,7 @@ const odooRoutes = require('./routes/odooRoutes');
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(checkCreditRoute); // Usa la nueva ruta
 
 app.use('/api/odoo', odooRoutes);
 
