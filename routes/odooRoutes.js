@@ -130,4 +130,21 @@ router.get('/partners/:id', async (req, res) => {
     }
 });
 
+// 🔹 Obtener documentos adjuntos de un producto
+router.get('/products/:id/attachments', async (req, res) => {
+    try {
+        const productId = parseInt(req.params.id);
+        if (!productId) return res.status(400).json({ error: 'ID de producto es requerido' });
+
+        const attachments = await callOdooAPI('ir.attachment', ['name', 'datas', 'type'], [['res_model', '=', 'product.product'], ['res_id', '=', productId]]);
+        if (!attachments || attachments.length === 0) {
+            return res.json({ message: 'No se encontraron documentos adjuntos para este producto', attachments: [] });
+        }
+
+        res.json({ attachments });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

@@ -9,6 +9,7 @@ const ODOO_DB = process.env.ODOO_DB;
 
 let sessionId = null;
 
+
 // 🔹 Autenticar en Odoo
 async function authenticateOdoo() {
     try {
